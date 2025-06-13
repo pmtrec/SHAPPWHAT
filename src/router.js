@@ -1,4 +1,4 @@
-import { renderNotFoundPage } from "/src/pages/home/fond.js";
+import { renderDiscussion } from "/src/pages/home/discusion.js";
 import { renderHome } from "/src/pages/homePage.js";
 import { renderInscription } from "/src/pages/InscriptionPage.js";
 import { renderLogin } from "/src/pages/LoginPage.js";
@@ -11,7 +11,7 @@ const routes = {
   "/home": renderHome,
   "/menu": renderMenuPage,
   "/new-contact": renderNewContactPage,
-  "/discusion": renderNotFoundPage,
+  "/discusion": renderDiscussion,
 };
 
 const middleViewPaths = ["/menu", "/new-contact"];
@@ -28,7 +28,7 @@ export async function router(path = "/login") {
   }
 
   try {
-    const viewElement = await viewFunction();
+    const viewElement = await viewFunction(path);
 
     if (!(viewElement instanceof HTMLElement)) {
       console.error(`❌ Erreur lors du rendu de la route "${path}" : La vue retournée n’est pas un élément HTML.`, viewElement);

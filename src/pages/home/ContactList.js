@@ -1,4 +1,33 @@
-// ContactList.js
+import { router } from "../../router";
+
+// Récupérer les initiales (prénom + nom)
+function getInitials(fullName) {
+  if (!fullName) return "";
+  const names = fullName.trim().split(/\s+/);
+  const firstInitial = names[0] ? names[0][0].toUpperCase() : "";
+  const lastInitial = names.length > 1 ? names[names.length - 1][0].toUpperCase() : "";
+  return firstInitial + lastInitial;
+}
+
+// Générer une couleur de fond cohérente à partir du nom (pour varier les avatars)
+function getAvatarColor(name) {
+  const colors = [
+    "#1F2937", // gris foncé
+    "#10B981", // vert
+    "#3B82F6", // bleu
+    "#EF4444", // rouge
+    "#F59E0B", // jaune
+    "#8B5CF6", // violet
+    "#EC4899", // rose
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % colors.length;
+  return colors[index];
+}
+
 export function renderContactList(contacts) {
   const container = document.createElement("div");
   container.className = "bg-gray-900 overflow-y-auto";
@@ -51,12 +80,10 @@ export function renderContactList(contacts) {
     
     card.innerHTML = `
       <div class="relative">
-        <img
-          src="${contact.avatar || '/api/placeholder/50/50'}"
-          alt="${contact.name}"
-          class="w-12 h-12 rounded-full object-cover ring-2 ring-transparent group-hover:ring-gray-600 transition-all duration-200"
-          onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiM0Qjk3MzYiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMzQiIGhlaWdodD0iMzQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDEyQzE0LjIwOTEgMTIgMTYgMTAuMjA5MSAxNiA4QzE2IDUuNzkwODYgMTQuMjA5MSA0IDEyIDRDOS43OTA4NiA0IDggNS43OTA4NiA4IDhDOCAxMC4yMDkxIDkuNzkwODYgMTIgMTIgMTJaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTIgMTRDOC42ODYyOSAxNCA2IDE2LjY4NjMgNiAyMFYyMkgxOFYyMEMxOCAxNi42ODYzIDE1LjMxMzcgMTQgMTIgMTRaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4KPC9zdmc+'"
-        />
+        <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg select-none ring-2 ring-transparent group-hover:ring-gray-600 transition-all duration-200"
+             style="background-color: ${getAvatarColor(contact.name)};">
+          ${getInitials(contact.name)}
+        </div>
         ${onlineStatus}
       </div>
       
@@ -103,8 +130,8 @@ export function renderContactList(contacts) {
       
       <!-- Menu contextuel (apparaît au hover) -->
       <div class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-        <button class="text-gray-400 hover:text-white p-1 rounded">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <button class="text-gray-400 hover:text-white p-1 rounded" aria-label="Options du contact">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
           </svg>
         </button>
@@ -113,22 +140,21 @@ export function renderContactList(contacts) {
     
     // Événements
     card.addEventListener('click', () => {
-      // Retirer la sélection précédente
       document.querySelectorAll('.contact-selected').forEach(el => {
         el.classList.remove('contact-selected', 'bg-gray-800');
+        
       });
       
-      // Sélectionner le contact actuel
       card.classList.add('contact-selected', 'bg-gray-800');
       
-      // Dispatchers un événement personnalisé
       const event = new CustomEvent('contactSelected', {
         detail: { contact, element: card }
       });
       container.dispatchEvent(event);
+      console.log('Tu as cliqué sur ce contact');
+      router("/discusion")
     });
-    
-    // Long press pour menu contextuel
+  
     let pressTimer;
     card.addEventListener('mousedown', () => {
       pressTimer = setTimeout(() => {
@@ -179,7 +205,5 @@ export function renderContactList(contacts) {
     `;
     document.head.appendChild(style);
   }
-  
   return container;
 }
-
