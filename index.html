@@ -1,14 +1,536 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="./src/style.css">
-  <title>Document</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Clone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'whatsapp-green': '#25D366',
+                        'whatsapp-dark': '#111B21',
+                        'whatsapp-light-gray': '#2A2F32',
+                        'whatsapp-gray': '#3B4A54',
+                        'whatsapp-blue': '#53BDEB'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .message-bubble {
+            max-width: 70%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            word-wrap: break-word;
+        }
+        
+        .message-bubble-out {
+            background-color: #005C4B;
+            color: white;
+        }
+        
+        .message-bubble-in {
+            background-color: #202C33;
+            color: white;
+        }
+        
+        .contact-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-bottom: 1px solid #2A2F32;
+        }
+        
+        .contact-item:hover {
+            background-color: #2A2F32;
+        }
+        
+        .contact-item.active {
+            background-color: #2A2F32;
+        }
+        
+        .sidebar-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 8px;
+            margin: 4px 8px;
+        }
+        
+        .sidebar-item:hover {
+            background-color: #2A2F32;
+        }
+        
+        .sidebar-item.active {
+            background-color: #25D366;
+        }
+        
+        .status-indicator {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            background-color: #25D366;
+            border: 2px solid #111B21;
+            border-radius: 50%;
+        }
+        
+        .status-indicator.offline {
+            background-color: #8696A0;
+        }
+        
+        .slide-in-right {
+            animation: slideInRight 0.3s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .recording-pulse {
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        
+        .attach-menu {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background: #2A2F32;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 50;
+        }
+        
+        .attach-option {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .attach-option:hover {
+            background-color: #3B4A54;
+        }
+        
+        .audio-waveform {
+            background: linear-gradient(90deg, #25D366 0%, #25D366 50%, #8696A0 50%, #8696A0 100%);
+            background-size: 4px 100%;
+            background-repeat: repeat-x;
+        }
+        
+        .call-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 40px;
+        }
+        
+        .call-control-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .call-control-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .call-control-btn.end-call {
+            background-color: #E53E3E;
+        }
+        
+        .call-control-btn.mute {
+            background-color: #3B4A54;
+        }
+        
+        .call-control-btn.video {
+            background-color: #3B4A54;
+        }
+        
+        /* Scrollbar personnalisée */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #2A2F32;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #8696A0;
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #25D366;
+        }
+    </style>
 </head>
-<body>
-  <div id="app"></div>
-  <div id="inscrire"></div>
-  <script type="module" src="./src/app.js"></script>
+<body class="bg-whatsapp-dark text-white font-sans">
+    <!-- Écran d'authentification -->
+    <div id="authScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-whatsapp-dark to-whatsapp-light-gray">
+        <div class="bg-whatsapp-light-gray p-8 rounded-lg shadow-2xl w-full max-w-md">
+            <!-- Étape du numéro de téléphone -->
+            <div id="phoneStep">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 bg-whatsapp-green rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                        </svg>
+                    </div>
+                    <h1 class="text-2xl font-bold text-white mb-2">WhatsApp Clone</h1>
+                    <p class="text-gray-400">Connectez-vous pour commencer à discuter</p>
+                </div>
+                
+                <form id="phoneForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Nom complet</label>
+                        <input type="text" id="userName" class="w-full px-3 py-2 bg-whatsapp-gray border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-whatsapp-green" placeholder="Votre nom" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Numéro de téléphone</label>
+                        <div class="flex">
+                            <select id="countryCode" class="px-3 py-2 bg-whatsapp-gray border border-gray-600 rounded-l-lg text-white focus:outline-none focus:border-whatsapp-green">
+                                <option value="+33">🇫🇷 +33</option>
+                                <option value="+1">🇺🇸 +1</option>
+                                <option value="+44">🇬🇧 +44</option>
+                                <option value="+49">🇩🇪 +49</option>
+                                <option value="+39">🇮🇹 +39</option>
+                                <option value="+34">🇪🇸 +34</option>
+                            </select>
+                            <input type="tel" id="phoneNumber" class="flex-1 px-3 py-2 bg-whatsapp-gray border border-gray-600 rounded-r-lg text-white placeholder-gray-400 focus:outline-none focus:border-whatsapp-green" placeholder="123456789" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-whatsapp-green text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors font-medium">
+                        Continuer
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Étape de vérification -->
+            <div id="verificationStep" class="hidden">
+                <div class="text-center mb-8">
+                    <button id="backBtn" class="absolute top-4 left-4 text-gray-400 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    
+                    <h2 class="text-xl font-bold text-white mb-2">Vérification du numéro</h2>
+                    <p class="text-gray-400 mb-4">Nous avons envoyé un code de vérification au numéro <span id="phoneDisplay" class="text-whatsapp-green font-medium"></span></p>
+                    
+                    <div id="smsMode" class="bg-whatsapp-gray p-4 rounded-lg mb-4">
+                        <p class="text-sm text-gray-300 mb-2">Mode test activé</p>
+                        <p class="text-xs text-gray-400">Code de test: <span id="testCode" class="text-whatsapp-green font-mono"></span></p>
+                    </div>
+                </div>
+                
+                <form id="verificationForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Code de vérification</label>
+                        <input type="text" id="verificationCode" class="w-full px-3 py-2 bg-whatsapp-gray border border-gray-600 rounded-lg text-white text-center text-lg tracking-widest focus:outline-none focus:border-whatsapp-green" placeholder="000000" maxlength="6" required>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-whatsapp-green text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors font-medium">
+                        Vérifier
+                    </button>
+                    
+                    <button type="button" id="resendBtn" class="w-full text-whatsapp-blue hover:text-blue-400 transition-colors text-sm">
+                        <span id="resendText">Renvoyer le code</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Application principale -->
+    <div id="mainApp" class="hidden h-screen flex">
+        <!-- Sidebar -->
+        <div class="w-80 bg-whatsapp-light-gray border-r border-whatsapp-gray flex flex-col">
+            <!-- Header -->
+            <div class="p-4 border-b border-whatsapp-gray">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div id="userAvatar" class="w-10 h-10 bg-whatsapp-green rounded-full flex items-center justify-center text-white font-bold cursor-pointer">
+                            U
+                        </div>
+                        <h1 class="ml-3 text-lg font-semibold">WhatsApp</h1>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="addContactBtn" class="p-2 hover:bg-whatsapp-gray rounded-full transition-colors" title="Ajouter un contact">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                        </button>
+                        <button id="syncContactsBtn" class="p-2 hover:bg-whatsapp-gray rounded-full transition-colors" title="Synchroniser les contacts">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Barre de recherche -->
+                <div class="mt-4">
+                    <div class="relative">
+                        <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input type="text" id="searchInput" class="w-full pl-10 pr-4 py-2 bg-whatsapp-gray border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-whatsapp-green" placeholder="Rechercher ou démarrer une nouvelle discussion">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <div class="flex border-b border-whatsapp-gray">
+                <button class="sidebar-item active flex-1 text-center" data-section="chats">
+                    <svg class="w-5 h-5 mx-auto mb-1" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                    </svg>
+                    <span class="text-xs">Discussions</span>
+                </button>
+                <button class="sidebar-item flex-1 text-center" data-section="status">
+                    <svg class="w-5 h-5 mx-auto mb-1" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    <span class="text-xs">Statuts</span>
+                </button>
+                <button class="sidebar-item flex-1 text-center" data-section="calls">
+                    <svg class="w-5 h-5 mx-auto mb-1" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
+                    </svg>
+                    <span class="text-xs">Appels</span>
+                </button>
+            </div>
+            
+            <!-- Liste des contacts -->
+            <div class="flex-1 overflow-y-auto" id="contactList">
+                <!-- Les contacts seront ajoutés dynamiquement -->
+            </div>
+        </div>
+        
+        <!-- Zone de chat -->
+        <div class="flex-1 flex flex-col">
+            <!-- Vue par défaut -->
+            <div id="defaultView" class="flex-1 flex items-center justify-center bg-whatsapp-dark">
+                <div class="text-center">
+                    <div class="w-32 h-32 bg-whatsapp-light-gray rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-light text-gray-300 mb-2">WhatsApp Clone</h2>
+                    <p class="text-gray-500">Sélectionnez une discussion pour commencer à discuter</p>
+                </div>
+            </div>
+            
+            <!-- Vue de chat -->
+            <div id="chatView" class="hidden flex-1 flex flex-col">
+                <!-- Header du chat -->
+                <div class="bg-whatsapp-light-gray p-4 border-b border-whatsapp-gray">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <button id="backToChatList" class="mr-3 p-1 hover:bg-whatsapp-gray rounded-full transition-colors md:hidden">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                                </svg>
+                            </button>
+                            <div class="relative mr-3">
+                                <div id="contactAvatar" class="w-10 h-10 bg-whatsapp-green rounded-full flex items-center justify-center text-white font-bold">
+                                    A
+                                </div>
+                                <div id="contactStatus" class="status-indicator"></div>
+                            </div>
+                            <div>
+                                <h3 id="contactName" class="font-medium text-white">Contact</h3>
+                                <p id="contactStatusText" class="text-sm text-gray-400">en ligne</p>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button id="voiceCallBtn" class="p-2 hover:bg-whatsapp-gray rounded-full transition-colors" title="Appel vocal">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
+                                </svg>
+                            </button>
+                            <button id="videoCallBtn" class="p-2 hover:bg-whatsapp-gray rounded-full transition-colors" title="Appel vidéo">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Messages -->
+                <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 bg-whatsapp-dark">
+                    <!-- Les messages seront ajoutés dynamiquement -->
+                </div>
+                
+                <!-- Zone de saisie -->
+                <div class="bg-whatsapp-light-gray p-4 border-t border-whatsapp-gray">
+                    <div class="flex items-end space-x-2">
+                        <div class="relative">
+                            <button id="attachBtn" class="p-2 hover:bg-whatsapp-gray rounded-full transition-colors">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/>
+                                </svg>
+                            </button>
+                            
+                            <!-- Menu d'attachement -->
+                            <div id="attachMenu" class="attach-menu hidden">
+                                <div class="attach-option" data-type="image">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                                    </svg>
+                                    <span>Photo</span>
+                                </div>
+                                <div class="attach-option" data-type="document">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                                    </svg>
+                                    <span>Document</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex-1 relative">
+                            <input type="text" id="messageInput" class="w-full px-4 py-2 bg-whatsapp-gray border border-gray-600 rounded-full text-white placeholder-gray-400 focus:outline-none focus:border-whatsapp-green" placeholder="Tapez votre message...">
+                            <button id="emojiBtn" class="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-whatsapp-light-gray rounded-full transition-colors">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12,2C6.486,2,2,6.486,2,12s4.486,10,10,10s10-4.486,10-10S17.514,2,12,2z M12,20c-4.411,0-8-3.589-8-8 s3.589-8,8-8s8,3.589,8,8S16.411,20,12,20z"/>
+                                    <circle cx="8.5" cy="10.5" r="1.5"/>
+                                    <circle cx="15.5" cy="10.5" r="1.5"/>
+                                    <path d="M12,18c2.28,0,4.168-1.66,4.168-3.707L16.168,14.293C16.168,15.597,14.28,17,12,17s-4.168-1.403-4.168-2.707 L7.832,14.293C7.832,16.34,9.72,18,12,18z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <button id="micBtn" class="p-2 hover:bg-whatsapp-gray rounded-full transition-colors">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+                            </svg>
+                        </button>
+                        
+                        <button id="sendBtn" class="p-2 bg-whatsapp-green hover:bg-green-600 rounded-full transition-colors">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal d'enregistrement audio -->
+    <div id="audioRecorderModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-whatsapp-light-gray p-8 rounded-lg shadow-2xl text-center">
+            <div class="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4 recording-pulse">
+                <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Enregistrement en cours</h3>
+            <p id="recordingTime" class="text-2xl font-mono text-whatsapp-green mb-6">00:00</p>
+            <div class="flex space-x-4 justify-center">
+                <button id="cancelRecordingBtn" class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                    Annuler
+                </button>
+                <button id="stopRecordingBtn" class="px-6 py-2 bg-whatsapp-green text-white rounded-lg hover:bg-green-600 transition-colors">
+                    Envoyer
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal d'appel -->
+    <div id="callModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+        <div class="text-center text-white">
+            <div class="w-32 h-32 bg-whatsapp-light-gray rounded-full flex items-center justify-center mx-auto mb-6" id="callAvatar">
+                <span class="text-white text-4xl font-bold">A</span>
+            </div>
+            <h3 id="callContactName" class="text-2xl font-bold mb-2">Contact</h3>
+            <p id="callStatus" class="text-gray-400 mb-8">Appel en cours...</p>
+            
+            <div class="call-controls">
+                <div class="call-control-btn mute" title="Couper le micro">
+                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+                    </svg>
+                </div>
+                <div class="call-control-btn video" title="Activer/Désactiver la vidéo">
+                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                    </svg>
+                </div>
+                <div id="endCallBtn" class="call-control-btn end-call" title="Raccrocher">
+                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.7l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28-.79-.73-1.68-1.36-2.66-1.85-.33-.16-.56-.51-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de synchronisation des contacts -->
+    <div id="contactSyncModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-whatsapp-light-gray p-8 rounded-lg shadow-2xl w-full max-w-md">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-whatsapp-green rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A2.996 2.996 0 0 0 16.96 6c-.8 0-1.54.37-2.01.97L12.5 10.5 8.99 9.5 9 8c0-.55-.45-1-1-1s-1 .45-1 1v3.5c0 .28.11.53.29.71l2.42 2.42c.18.18.43.29.71.29h3.58v3c0 .55.45 1 1 1s1-.45 1-1z"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Synchroniser les contacts</h3>
+                <p class="text-gray-400">Voulez-vous synchroniser vos contacts pour trouver vos amis sur WhatsApp ?</p>
+            </div>
+            
+            <div class="space-y-3">
+                <button id="syncNowBtn" class="w-full bg-whatsapp-green text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors font-medium">
+                    Synchroniser maintenant
+                </button>
+                <button id="skipSyncBtn" class="w-full text-gray-400 hover:text-white transition-colors">
+                    Ignorer pour le moment
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Inputs cachés pour les fichiers -->
+    <input type="file" id="imageInput" accept="image/*" class="hidden">
+    <input type="file" id="documentInput" accept=".pdf,.doc,.docx,.txt,.zip,.rar" class="hidden">
+    
+    <!-- Script principal -->
+    <script src="js/app.js"></script>
 </body>
 </html>

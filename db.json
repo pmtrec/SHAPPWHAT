@@ -1,0 +1,197 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "nom": "John Doe",
+      "telephone": "+221771234567",
+      "email": "john@example.com",
+      "avatar": null,
+      "description": "Salut ! J'utilise WhatsApp.",
+      "isOnline": true,
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "settings": {
+        "privacy": {
+          "profilePhoto": "everyone",
+          "status": "everyone",
+          "lastSeen": "everyone",
+          "readReceipts": true,
+          "groups": "everyone"
+        },
+        "notifications": {
+          "messageNotifications": true,
+          "groupNotifications": true,
+          "callNotifications": true,
+          "sound": "default"
+        },
+        "security": {
+          "twoFactorAuth": false,
+          "fingerprintLock": false,
+          "autoLock": false
+        },
+        "theme": "dark",
+        "language": "fr"
+      },
+      "business": {
+        "isBusinessAccount": false,
+        "businessName": null,
+        "category": null,
+        "description": null,
+        "website": null,
+        "email": null,
+        "address": null
+      }
+    }
+  ],
+  "contacts": [
+    {
+      "id": "2",
+      "nom": "Alice Martin",
+      "telephone": "+221772345678",
+      "avatar": null,
+      "isOnline": false,
+      "lastSeen": "2024-01-15T09:15:00Z",
+      "description": "Toujours positive ! ✨",
+      "isBlocked": false,
+      "isFavorite": false,
+      "labels": ["famille"]
+    },
+    {
+      "id": "3",
+      "nom": "Bob Wilson",
+      "telephone": "+221773456789",
+      "avatar": null,
+      "isOnline": true,
+      "lastSeen": "2024-01-15T10:45:00Z",
+      "description": "Développeur passionné 💻",
+      "isBlocked": false,
+      "isFavorite": true,
+      "labels": ["travail", "ami"]
+    }
+  ],
+  "conversations": [
+    {
+      "id": "conv_1_2",
+      "participants": ["1", "2"],
+      "type": "individual",
+      "lastMessage": {
+        "id": "msg_1",
+        "content": "Salut ! Comment ça va ?",
+        "type": "text",
+        "sender": "2",
+        "timestamp": "2024-01-15T10:30:00Z",
+        "status": "read"
+      },
+      "unreadCount": 0,
+      "isArchived": false,
+      "isPinned": false,
+      "muteUntil": null,
+      "disappearingMessages": {
+        "enabled": false,
+        "duration": null
+      }
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg_1",
+      "conversationId": "conv_1_2",
+      "sender": "2",
+      "content": "Salut ! Comment ça va ?",
+      "type": "text",
+      "timestamp": "2024-01-15T10:30:00Z",
+      "status": "read",
+      "replyTo": null,
+      "forwarded": false,
+      "starred": false,
+      "edited": false,
+      "editedAt": null,
+      "reactions": [],
+      "mentions": [],
+      "disappearAt": null,
+      "viewOnce": false,
+      "metadata": {}
+    }
+  ],
+  "groups": [
+    {
+      "id": "group_1",
+      "name": "Famille",
+      "description": "Notre groupe famille",
+      "avatar": null,
+      "creator": "1",
+      "admins": ["1"],
+      "members": ["1", "2", "3"],
+      "createdAt": "2024-01-10T08:00:00Z",
+      "settings": {
+        "whoCanSend": "everyone",
+        "whoCanEditInfo": "admins",
+        "whoCanAddMembers": "admins",
+        "disappearingMessages": {
+          "enabled": false,
+          "duration": null
+        }
+      },
+      "pinnedMessages": [],
+      "polls": []
+    }
+  ],
+  "statuses": [
+    {
+      "id": "status_1",
+      "userId": "1",
+      "type": "text",
+      "content": "Bonne journée à tous ! ☀️",
+      "backgroundColor": "#00a884",
+      "timestamp": "2024-01-15T08:00:00Z",
+      "expiresAt": "2024-01-16T08:00:00Z",
+      "views": [
+        {
+          "userId": "2",
+          "viewedAt": "2024-01-15T08:30:00Z"
+        }
+      ],
+      "privacy": "contacts"
+    }
+  ],
+  "calls": [
+    {
+      "id": "call_1",
+      "participants": ["1", "2"],
+      "type": "voice",
+      "status": "completed",
+      "initiator": "1",
+      "startTime": "2024-01-15T09:00:00Z",
+      "endTime": "2024-01-15T09:15:00Z",
+      "duration": 900
+    }
+  ],
+  "communities": [
+    {
+      "id": "community_1",
+      "name": "Développeurs Sénégal",
+      "description": "Communauté des développeurs du Sénégal",
+      "avatar": null,
+      "creator": "1",
+      "admins": ["1"],
+      "groups": ["group_1"],
+      "createdAt": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "businessCatalogs": [
+    {
+      "id": "catalog_1",
+      "businessId": "1",
+      "products": [
+        {
+          "id": "product_1",
+          "name": "Service de développement",
+          "description": "Développement d'applications web et mobile",
+          "price": 500000,
+          "currency": "XOF",
+          "images": [],
+          "category": "services"
+        }
+      ]
+    }
+  ]
+}
